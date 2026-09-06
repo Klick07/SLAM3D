@@ -20,7 +20,7 @@ const keyboardMap = [
 ];
 
 function Environment() {
-  const roadGLTF = useGLTF("/city.glb");
+  const roadGLTF = useGLTF("/road.glb");
   const treeGLTF = useGLTF("/tree.glb");
 
   const trees = useMemo(() => {
@@ -30,6 +30,7 @@ function Environment() {
       const x = (Math.random() - 0.5) * 160;
       const z = (Math.random() - 0.5) * 160;
 
+      // Keep trees off the road strip
       if (Math.abs(x) < 12) {
         i++;
         continue;
@@ -46,22 +47,27 @@ function Environment() {
 
   return (
     <>
-      {/* 1. PHYSICS REMOVED: Road is purely visual so it cannot trap the car */}
-      <primitive object={roadGLTF.scene} scale={10} position={[0, -4.35, 0]} receiveShadow />
+      <primitive object={roadGLTF.scene} position={[0, 0.2, 0]} receiveShadow />
 
-      {/* 2. PHYSICS REMOVED: Trees are purely visual so their bounding boxes don't overlap */}
+      {/* Trees with physics colliders added back */}
       {trees.map((t) => (
-        <primitive
-          key={`tree-${t.id}`}
-          object={treeGLTF.scene.clone()}
+        <RigidBody 
+          key={`tree-${t.id}`} 
+          type="fixed" 
+          colliders={false} 
           position={t.pos}
-          scale={t.scale}
-          castShadow
-          receiveShadow
-        />
+        >
+          {/* Adjust the collider args [radius, height] or [halfX, halfY, halfZ] to match your tree trunk */}
+          <CuboidCollider args={[0.8 * t.scale, 3 * t.scale, 0.8 * t.scale]} position={[0, 3 * t.scale, 0]} />
+          <primitive
+            object={treeGLTF.scene.clone()}
+            scale={t.scale}
+            castShadow
+            receiveShadow
+          />
+        </RigidBody>
       ))}
 
-      {/* 3. THE ONLY COLLIDER: A mathematically perfect, thick floor to stop falling */}
       <RigidBody type="fixed" friction={5} restitution={0}>
         <CuboidCollider args={[200, 2, 200]} position={[0, -2, 0]} />
         <mesh
@@ -76,7 +82,6 @@ function Environment() {
     </>
   );
 }
-
 function Vehicle({ telemetry, setTelemetry, cameraMode, setCameraMode }) {
   const chassisRef = useRef(null);
   const visualGroupRef = useRef(null);
