@@ -1,3 +1,4 @@
+
 import { useRef, useState, useMemo, Suspense, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Physics, RigidBody, CuboidCollider } from "@react-three/rapier";
@@ -19,7 +20,7 @@ const keyboardMap = [
 ];
 
 function Environment() {
-  const roadGLTF = useGLTF("/road.glb");
+  const roadGLTF = useGLTF("/city.glb");
   const treeGLTF = useGLTF("/tree.glb");
 
   const trees = useMemo(() => {
@@ -46,7 +47,7 @@ function Environment() {
   return (
     <>
       {/* 1. PHYSICS REMOVED: Road is purely visual so it cannot trap the car */}
-      <primitive object={roadGLTF.scene} position={[0, 0.2, 0]} receiveShadow />
+      <primitive object={roadGLTF.scene} scale={10} position={[0, -4.35, 0]} receiveShadow />
 
       {/* 2. PHYSICS REMOVED: Trees are purely visual so their bounding boxes don't overlap */}
       {trees.map((t) => (
@@ -82,7 +83,7 @@ function Vehicle({ telemetry, setTelemetry, cameraMode, setCameraMode }) {
 
   // Keep a ref to track previous velocity for acceleration calculations
   const prevLinvel = useRef(new THREE.Vector3());
-  const mass = 45;
+  const mass = 45;    
 
   const roverGLTF = useGLTF("/rover.glb");
 
@@ -183,8 +184,8 @@ function Vehicle({ telemetry, setTelemetry, cameraMode, setCameraMode }) {
       targetVelocityX = driveDir.x * 15;
       targetVelocityZ = driveDir.z * 15;
     } else if (backward) {
-      targetVelocityX = driveDir.x * -6;
-      targetVelocityZ = driveDir.z * -6;
+      targetVelocityX = driveDir.x * -15;
+      targetVelocityZ = driveDir.z * -15;
     } else if (brake) {
       targetVelocityX = linvel.x * 0.9;
       targetVelocityZ = linvel.z * 0.9;
@@ -257,7 +258,7 @@ function Vehicle({ telemetry, setTelemetry, cameraMode, setCameraMode }) {
 useGLTF.preload("/rover.glb");
 
 useGLTF.preload("/truck.glb");
-useGLTF.preload("/road.glb");
+useGLTF.preload("/city.glb");
 useGLTF.preload("/tree.glb");
 useGLTF.preload("/grass.glb");
 
@@ -316,7 +317,9 @@ export default function App() {
         </button>
       </div>
 
-      <Canvas shadows camera={{ position: [0, 8, 14], fov: 50 }}>
+      <Canvas shadows
+      gl={{ shadowMap: { type: THREE.PCFShadowMap } }}
+       camera={{ position: [0, 8, 14], fov: 50 }}>
         <ambientLight intensity={0.7} />
         <directionalLight
           position={[30, 50, 20]}
